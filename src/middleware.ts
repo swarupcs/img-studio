@@ -10,8 +10,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
 
-  // Public gallery — always accessible regardless of auth
+  // Public routes — always accessible regardless of auth
   if (pathname === "/gallery" || (pathname.startsWith("/gallery") && !pathname.startsWith("/gallery/user"))) {
+    return NextResponse.next();
+  }
+  if (pathname.startsWith("/p/") || pathname === "/p") {
     return NextResponse.next();
   }
 

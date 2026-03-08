@@ -117,10 +117,73 @@ Save the current canvas image to the user's personal gallery in the database. Th
 - **Backend**: `POST /api/images` creates a `GeneratedImage` record with imageData, prompt, and auto-generated title.
 - **Store**: `saveCurrentImage(title?)` in `useEditorStore`.
 
-### Export (Download)
-Download the current canvas as a PNG file named `imggen-{timestamp}.png`.
+### Export Options Panel
+Download the current canvas with full control over format, quality, and scale.
 
-- **Frontend**: Export button in editor Navbar.
+- **Frontend**: Export button opens `ExportPanel` overlay. Supports PNG (lossless), JPEG, and WebP formats; quality slider (10–100%); scale factor (0.5×, 1×, 2×, 3×). Uses off-screen canvas to render at target resolution.
+
+---
+
+## Editor — Phase 2 Features
+
+### Flip & Rotate
+Non-destructive local transform operations applied directly to the canvas.
+
+- **Actions**: Flip Horizontal, Flip Vertical, Rotate 90° Left (CCW), Rotate 90° Right (CW).
+- **Frontend**: Transform section in left sidebar. Rotation swaps canvas width/height automatically.
+- **Store**: `flipHorizontal()`, `flipVertical()`, `rotateLeft()`, `rotateRight()` in `useEditorStore`. All use Canvas 2D context transforms and call `pushToHistory`.
+- **Credits**: Free — local canvas operation.
+
+### Canvas Effects
+Local non-AI visual effects applied directly to pixel data.
+
+- **Effects**: Gaussian Blur (0–20px via CSS filter), Vignette (0–100% radial gradient overlay), Film Grain (0–100 random pixel noise), Sharpen (3×3 convolution kernel `[0,-1,0,-1,5,-1,0,-1,0]`).
+- **Frontend**: Canvas Effects section in left sidebar with sliders. Live preview via slider value. "Apply Effects" bakes all three sliders into the canvas. "Sharpen" is a separate one-click button.
+- **Store**: `canvasEffects` state slice, `setCanvasEffect()`, `applyCanvasEffects()`, `applySharpen()` in `useEditorStore`. Resets `canvasEffects` values after applying.
+- **Credits**: Free — local canvas operation.
+
+### Keyboard Shortcuts
+Full keyboard shortcut system for tools, history, and canvas navigation.
+
+- **Shortcuts**: `M` Move, `B` Brush, `E` Eraser, `C` Crop, `T` Text, `P` Color picker, `W` Smart remove, `Esc` Return to Move, `Ctrl+Z` Undo, `Ctrl+Y` Redo, `[` Brush size −10, `]` Brush size +10, `Space+drag` Pan canvas.
+- **Frontend**: `useKeyboardShortcuts` hook registered in editor page. Help modal (`KeyboardShortcutModal`) accessible via `?` keyboard icon button in navbar. Modal shows all shortcuts grouped by category.
+- **Files**: `src/hooks/useKeyboardShortcuts.ts`, `src/components/keyboard-shortcut-modal.tsx`.
+
+### Prompt Templates
+Quick-select prompt chips displayed above the AI prompt input bar.
+
+- **Templates**: Golden Hour, Add Rain, Pencil Sketch, Neon Night, Cinematic, Soft Portrait, Vintage Film, Snow Scene.
+- **Frontend**: `PromptTemplates` component renders a horizontally scrollable row of pill buttons. Clicking a chip calls `setPrompt()` to populate the input. Shown only when an image is loaded.
+- **Files**: `src/components/prompt-templates.tsx`. Template data in `src/lib/constants.ts`.
+
+### AI Recolor Tool
+AI-powered recoloring of a user-masked area to a target color.
+
+- **Usage**: Paint a mask using the Brush/Rectangle tool, open "AI Recolor" in the left sidebar, pick a target color, click Apply.
+- **Frontend**: AI Recolor accordion item in left sidebar with `<input type="color">` picker and Apply button (disabled until mask exists).
+- **Backend**: `POST /api/edit-image` with `maskBase64` and a constructed prompt specifying target color. Deducts 1 credit.
+- **Store**: `recolorArea(targetColor: string)` in `useEditorStore`.
+
+### Sticker / Emoji Panel
+Add emoji stickers as draggable text layers over the image.
+
+- **Usage**: Click a sticker to add it centered on the canvas. Drag to reposition. Double-click to edit. Use "Flatten to Image" to bake all text/stickers permanently.
+- **Frontend**: Sticker Panel section in left sidebar with category tabs (Faces, Nature, Objects, Symbols) and an emoji grid. Uses the existing text layer system with `fontSize: 64` and emoji-compatible font stack.
+- **Files**: `src/components/sticker-panel.tsx`. Sticker data in `src/lib/constants.ts` (`STICKER_CATEGORIES`).
+- **Credits**: Free — reuses text layer infrastructure.
+
+### Shareable Image Links
+Generate a public URL for any saved image to share outside the app.
+
+- **Usage**: In My Gallery, click the link icon on any image to copy its public URL. If the image is private, it is automatically made public first.
+- **Frontend**: Link2 icon button in gallery image hover overlay with "Copied!" feedback state. Public page at `/p/[id]` shows the image, title, prompt, author, and a "Try ImgGen" CTA.
+- **Backend**: No new API needed — uses existing `PATCH /api/images/[id]` to set `isPublic: true`. Public page fetches directly from Prisma (server component).
+- **Files**: `src/app/p/[id]/page.tsx`. Route allowlisted in `src/middleware.ts`.
+
+### Image Info Bar
+Displays current canvas dimensions and zoom level at the bottom-left of the canvas.
+
+- **Frontend**: Absolutely-positioned pill overlay in `image-editor.tsx` showing `{width} × {height}` and `{zoom}%`. Updates reactively via `canvasDimensions` local state (set on image load). Sits alongside the zoom controls panel at bottom-right.
 
 ---
 

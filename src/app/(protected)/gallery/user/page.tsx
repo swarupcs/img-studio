@@ -17,6 +17,8 @@ import {
   X,
   Loader2,
   ImageIcon,
+  Link2,
+  Check,
 } from "lucide-react";
 
 type SavedImage = {
@@ -72,6 +74,7 @@ export default function GalleryPage() {
   const [creatingCollection, setCreatingCollection] = useState(false);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -141,6 +144,22 @@ export default function GalleryPage() {
     } finally {
       setAddingToCollection(null);
     }
+  };
+
+  const handleCopyLink = async (img: SavedImage) => {
+    // Make public first if private
+    if (!img.isPublic) {
+      await fetch(`/api/images/${img.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: true }),
+      });
+      setImages((prev) => prev.map((i) => (i.id === img.id ? { ...i, isPublic: true } : i)));
+    }
+    const url = `${window.location.origin}/p/${img.id}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedLink(img.id);
+    setTimeout(() => setCopiedLink(null), 2000);
   };
 
   const handleDeleteCollection = async (id: string) => {
@@ -237,12 +256,21 @@ export default function GalleryPage() {
                           {img.isPublic ? <Globe size={11} /> : <Lock size={11} />}
                           {img.isPublic ? "Public" : "Private"}
                         </button>
-                        <button
-                          onClick={() => handleDelete(img.id)}
-                          className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleCopyLink(img)}
+                            title="Copy shareable link"
+                            className="p-1.5 rounded-lg bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 transition-colors"
+                          >
+                            {copiedLink === img.id ? <Check size={13} className="text-emerald-400" /> : <Link2 size={13} />}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(img.id)}
+                            className="p-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </div>
                       {/* Add to collection */}
                       {collections.length > 0 && (

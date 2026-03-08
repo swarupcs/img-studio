@@ -15,6 +15,7 @@ import {
   Zap,
   CheckCircle2,
   SplitSquareHorizontal,
+  Keyboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/useEditorState";
@@ -25,7 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ExportPanel } from "@/components/export-panel";
-import { BeforeAfterSlider } from "@/components/before-after-slider";
+import { KeyboardShortcutModal } from "@/components/keyboard-shortcut-modal";
 
 export function Navbar({
   fileInputRef,
@@ -49,6 +50,7 @@ export function Navbar({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   useEffect(() => {
     fetchCredits();
@@ -241,8 +243,8 @@ export function Navbar({
             <TooltipContent side="bottom" className="text-xs md:hidden">Export</TooltipContent>
           </Tooltip>
 
-          {/* History Toggle */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* History Toggle + Shortcuts */}
+          <div className="hidden md:flex items-center gap-1">
             <div className="h-5 w-px bg-zinc-800 mx-1" />
             <Tooltip>
               <TooltipTrigger asChild>
@@ -264,12 +266,26 @@ export function Navbar({
                 {showHistory ? "Close History" : "Open History"}
               </TooltipContent>
             </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowShortcuts(true)}
+                  className="h-8 w-8 rounded-lg text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/80"
+                >
+                  <Keyboard size={15} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">Keyboard Shortcuts (?)</TooltipContent>
+            </Tooltip>
           </div>
         </TooltipProvider>
       </div>
     </header>
 
     {showExport && <ExportPanel onClose={() => setShowExport(false)} />}
+    <KeyboardShortcutModal open={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </>
   );
 }

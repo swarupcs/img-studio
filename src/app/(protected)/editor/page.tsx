@@ -11,6 +11,8 @@ import { useCallback, useRef, useState } from "react";
 import { useEditorStore } from "@/store/useEditorState";
 import ImageEditor from "@/components/image-editor";
 import { BeforeAfterSlider } from "@/components/before-after-slider";
+import { PromptTemplates } from "@/components/prompt-templates";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import {
   ImagePlus,
   Upload,
@@ -22,6 +24,7 @@ import {
 } from "lucide-react";
 
 export default function EditorPage() {
+  useKeyboardShortcuts();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     image,
@@ -257,7 +260,8 @@ export default function EditorPage() {
             </div>
 
             {/* PROMPT INPUT AREA */}
-            <div className="shrink-0 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/50 p-4 lg:p-5 z-40">
+            <div className="shrink-0 bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-800/50 px-4 pt-3 pb-4 lg:px-5 lg:pt-3 lg:pb-5 z-40 space-y-2">
+              {image && <PromptTemplates />}
               <AIPromptInput />
             </div>
           </main>

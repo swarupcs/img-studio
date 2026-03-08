@@ -29,6 +29,7 @@ const ImageEditor = () => {
   // Zoom + Pan state
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
+  const [canvasDimensions, setCanvasDimensions] = useState<{ w: number; h: number } | null>(null);
   const isPanningRef = useRef(false);
   const lastPanPosRef = useRef<Point>({ x: 0, y: 0 });
   const spaceHeldRef = useRef(false);
@@ -110,6 +111,7 @@ const ImageEditor = () => {
       overlayCanvasRef.current.width = img.width;
       overlayCanvasRef.current.height = img.height;
 
+      setCanvasDimensions({ w: img.naturalWidth, h: img.naturalHeight });
       draw();
       fitToContainer();
     };
@@ -423,6 +425,15 @@ const ImageEditor = () => {
           ))}
         </div>
       </div>
+
+      {/* Image Info Bar — bottom left */}
+      {canvasDimensions && (
+        <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-800 rounded-xl px-3 py-1.5 z-30 text-[10px] text-zinc-500 font-mono select-none">
+          <span>{canvasDimensions.w} × {canvasDimensions.h}</span>
+          <div className="w-px h-3 bg-zinc-700" />
+          <span>{Math.round(zoom * 100)}%</span>
+        </div>
+      )}
 
       {/* Zoom Controls — outside transform, always visible */}
       <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-zinc-900/90 backdrop-blur-sm border border-zinc-800 rounded-xl p-1 z-30">

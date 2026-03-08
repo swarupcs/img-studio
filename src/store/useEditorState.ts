@@ -82,10 +82,25 @@ type EditorState = {
   applyCrop: () => void;
 
   // --- Text Layer Actions ---
-  addTextLayer: (text: string, x?: number, y?: number) => void;
+  addTextLayer: (text: string, x?: number, y?: number, options?: { fontSize?: number; fontFamily?: string; color?: string }) => void;
   updateTextLayer: (id: string, updates: Partial<TextLayer>) => void;
   removeTextLayer: (id: string) => void;
   flattenTextLayers: () => void;
+
+  // --- Phase 2: Flip & Rotate ---
+  flipHorizontal: () => void;
+  flipVertical: () => void;
+  rotateLeft: () => void;
+  rotateRight: () => void;
+
+  // --- Phase 2: Canvas Effects ---
+  canvasEffects: { blur: number; vignette: number; grain: number };
+  setCanvasEffect: (effects: Partial<{ blur: number; vignette: number; grain: number }>) => void;
+  applyCanvasEffects: () => void;
+  applySharpen: () => void;
+
+  // --- Phase 2: AI Recolor ---
+  recolorArea: (targetColor: string) => Promise<void>;
 };
 
 async function callEditImage(
@@ -137,6 +152,7 @@ export const useEditorStore = create<EditorState>()(
     pickedColor: null,
     showBeforeAfter: false,
     cropRect: null,
+    canvasEffects: { blur: 0, vignette: 0, grain: 0 },
 
     // --- Setters ---
     setMask: (mask) => set({ mask }),
@@ -160,6 +176,7 @@ export const useEditorStore = create<EditorState>()(
         textLayers: [],
         cropRect: null,
         adjustments: { ...DEFAULT_ADJUSTMENTS },
+        canvasEffects: { blur: 0, vignette: 0, grain: 0 },
       })),
     setHistory: (history) => set({ history }),
     setHistoryIndex: (index) => {
@@ -413,7 +430,7 @@ export const useEditorStore = create<EditorState>()(
     },
 
     // --- Text Layer Actions ---
-    addTextLayer: (text, x = 0.5, y = 0.5) => {
+    addTextLayer: (text, x = 0.5, y = 0.5, options) => {
       set((s) => ({
         textLayers: [
           ...s.textLayers,
@@ -422,9 +439,9 @@ export const useEditorStore = create<EditorState>()(
             text,
             x,
             y,
-            fontSize: 32,
-            color: '#ffffff',
-            fontFamily: 'Inter, sans-serif',
+            fontSize: options?.fontSize ?? 32,
+            color: options?.color ?? '#ffffff',
+            fontFamily: options?.fontFamily ?? 'Inter, sans-serif',
           },
         ],
       }));
@@ -467,6 +484,191 @@ export const useEditorStore = create<EditorState>()(
         const newImg = canvas.toDataURL('image/png');
         set({ ...pushToHistory(get(), newImg), textLayers: [] });
       };
+    },
+
+    // --- Phase 2: Flip & Rotate ---
+    flipHorizontal: () => {
+      const { image } = get();
+      if (!image) return;
+      const img = new window.Image();
+      img.src = image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, 0, 0);
+        set({ ...pushToHistory(get(), canvas.toDataURL('image/png')) });
+      };
+    },
+
+    flipVertical: () => {
+      const { image } = get();
+      if (!image) return;
+      const img = new window.Image();
+      img.src = image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.translate(0, canvas.height);
+        ctx.scale(1, -1);
+        ctx.drawImage(img, 0, 0);
+        set({ ...pushToHistory(get(), canvas.toDataURL('image/png')) });
+      };
+    },
+
+    rotateLeft: () => {
+      const { image } = get();
+      if (!image) return;
+      const img = new window.Image();
+      img.src = image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalHeight;
+        canvas.height = img.naturalWidth;
+        const ctx = canvas.getContext('2d')!;
+        ctx.translate(0, canvas.height);
+        ctx.rotate(-Math.PI / 2);
+        ctx.drawImage(img, 0, 0);
+        set({ ...pushToHistory(get(), canvas.toDataURL('image/png')) });
+      };
+    },
+
+    rotateRight: () => {
+      const { image } = get();
+      if (!image) return;
+      const img = new window.Image();
+      img.src = image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalHeight;
+        canvas.height = img.naturalWidth;
+        const ctx = canvas.getContext('2d')!;
+        ctx.translate(canvas.width, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(img, 0, 0);
+        set({ ...pushToHistory(get(), canvas.toDataURL('image/png')) });
+      };
+    },
+
+    // --- Phase 2: Canvas Effects ---
+    setCanvasEffect: (effects) =>
+      set((s) => ({ canvasEffects: { ...s.canvasEffects, ...effects } })),
+
+    applyCanvasEffects: () => {
+      const state = get();
+      if (!state.image) return;
+      const { blur, vignette, grain } = state.canvasEffects;
+      if (blur === 0 && vignette === 0 && grain === 0) return;
+
+      const img = new window.Image();
+      img.src = state.image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d')!;
+
+        if (blur > 0) ctx.filter = `blur(${blur}px)`;
+        ctx.drawImage(img, 0, 0);
+        ctx.filter = 'none';
+
+        if (grain > 0) {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const d = imageData.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const n = (Math.random() - 0.5) * grain * 2;
+            d[i] = Math.max(0, Math.min(255, d[i] + n));
+            d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+            d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n));
+          }
+          ctx.putImageData(imageData, 0, 0);
+        }
+
+        if (vignette > 0) {
+          const g = ctx.createRadialGradient(
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.25,
+            canvas.width / 2, canvas.height / 2, canvas.width * 0.75
+          );
+          g.addColorStop(0, 'rgba(0,0,0,0)');
+          g.addColorStop(1, `rgba(0,0,0,${vignette / 100})`);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        set({
+          ...pushToHistory(get(), canvas.toDataURL('image/png')),
+          canvasEffects: { blur: 0, vignette: 0, grain: 0 },
+        });
+      };
+    },
+
+    applySharpen: () => {
+      const { image } = get();
+      if (!image) return;
+      const img = new window.Image();
+      img.src = image;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+
+        const w = canvas.width;
+        const h = canvas.height;
+        const src = ctx.getImageData(0, 0, w, h);
+        const s = src.data;
+        const out = new Uint8ClampedArray(s.length);
+        const k = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            for (let c = 0; c < 3; c++) {
+              let v = 0;
+              for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                  v += s[((y + ky) * w + (x + kx)) * 4 + c] * k[(ky + 1) * 3 + (kx + 1)];
+                }
+              }
+              out[(y * w + x) * 4 + c] = Math.max(0, Math.min(255, v));
+            }
+            out[(y * w + x) * 4 + 3] = s[(y * w + x) * 4 + 3];
+          }
+        }
+        // Copy border pixels
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (y === 0 || y === h - 1 || x === 0 || x === w - 1) {
+              for (let c = 0; c < 4; c++) out[(y * w + x) * 4 + c] = s[(y * w + x) * 4 + c];
+            }
+          }
+        }
+        ctx.putImageData(new ImageData(out, w, h), 0, 0);
+        set({ ...pushToHistory(get(), canvas.toDataURL('image/png')) });
+      };
+    },
+
+    // --- Phase 2: AI Recolor ---
+    recolorArea: async (targetColor) => {
+      const state = get();
+      if (!state.image) return;
+      set({ isLoading: true });
+      const prompt = `Recolor only the masked white area to exactly ${targetColor}. Maintain all existing textures, material properties, lighting direction, shadows, and highlights. Only change the hue and saturation. The result must look photorealistic and seamlessly integrated.`;
+      try {
+        const data = await callEditImage(state.image, prompt, {
+          maskBase64: state.mask,
+        });
+        if (data.credits !== undefined) set({ credits: data.credits });
+        set({ ...pushToHistory(get(), data.result), isLoading: false });
+      } catch (err) {
+        set({ isLoading: false });
+        throw err;
+      }
     },
   }))
 );
