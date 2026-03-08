@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Loader2 } from "lucide-react";
+import { OAuthButtons } from "@/components/auth/oauth-buttons";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -114,6 +115,19 @@ export default function SignInPage() {
           Sign In
         </Button>
       </form>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-zinc-800" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-zinc-950 px-3 text-zinc-500">or continue with</span>
+        </div>
+      </div>
+
+      {/* OAuth */}
+      <OAuthButtons />
 
       {/* Footer */}
       <p className="text-center text-sm text-zinc-500">
