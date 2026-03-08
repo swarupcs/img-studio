@@ -50,12 +50,14 @@ export default function DashboardPage() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800/50">
-            <User size={14} className="text-zinc-400" />
-            <span className="text-sm text-zinc-300 hidden sm:block">
-              {session?.user?.name || session?.user?.email}
-            </span>
-          </div>
+          <Link href="/profile">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800/80 hover:border-zinc-700/50 transition-colors cursor-pointer">
+              <User size={14} className="text-zinc-400" />
+              <span className="text-sm text-zinc-300 hidden sm:block">
+                {session?.user?.name || session?.user?.email}
+              </span>
+            </div>
+          </Link>
           <Button
             onClick={() => signOut({ callbackUrl: "/signin" })}
             variant="ghost"

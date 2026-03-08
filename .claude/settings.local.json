@@ -12,7 +12,9 @@
       "Bash(pnpm dev:*)",
       "Bash(taskkill:*)",
       "Bash(tasklist:*)",
-      "Bash(pnpm prisma:*)"
+      "Bash(pnpm prisma:*)",
+      "Bash(find E:\\\\My Projects\\\\ai-image-editor\\\\src\\\\app\\\\\\(protected\\):*)",
+      "Bash(ls:*)"
     ]
   }
 }
