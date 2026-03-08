@@ -35,9 +35,15 @@ const ImageEditor = () => {
   const lastPanPosRef = useRef<Point>({ x: 0, y: 0 });
   const spaceHeldRef = useRef(false);
 
-  // Crop local state (visual drag in progress)
+  // Crop local state
   const [cropDragging, setCropDragging] = useState(false);
   const cropStartRef = useRef<Point | null>(null);
+  const cropHandleRef = useRef<string | null>(null);
+  const [cropAspect, setCropAspect] = useState<"free" | "1:1" | "4:3" | "16:9" | "3:2" | "9:16">("free");
+
+  const ASPECT_RATIOS: Record<string, number | null> = {
+    free: null, "1:1": 1, "4:3": 4 / 3, "16:9": 16 / 9, "3:2": 3 / 2, "9:16": 9 / 16,
+  };
 
   const {
     image,
@@ -201,6 +207,14 @@ const ImageEditor = () => {
     return () => { window.removeEventListener("keydown", down); window.removeEventListener("keyup", up); };
   }, []);
 
+  // ── Crop handle pointer down ──────────────────────────────────────────
+  const handleCropHandleDown = (handle: string) => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    cropHandleRef.current = handle;
+    isDrawingRef.current = true;
+    startPosRef.current = getPointerPos(e as unknown as PointerEvent);
+  };
+
   // ── Pointer Down ──────────────────────────────────────────────────────
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     // Pan: middle mouse or space+drag
@@ -235,25 +249,6 @@ const ImageEditor = () => {
       return;
     }
 
-    // Smart remove — create circular mask and trigger AI
-    if (tool === ToolType.SMART_REMOVE) {
-      const mask = maskCanvasRef.current;
-      if (!mask) return;
-      const ctx = mask.getContext("2d")!;
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, mask.width, mask.height);
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, brushSize * 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      const dataUrl = mask.toDataURL("image/png");
-      setMask(dataUrl);
-      setPrompt("Remove the selected object from the image and fill the area with a natural-looking background");
-      setTimeout(() => generateEdit(), 50);
-      isDrawingRef.current = false;
-      return;
-    }
-
     // Crop start
     if (tool === ToolType.CROP) {
       cropStartRef.current = pos;
@@ -262,7 +257,7 @@ const ImageEditor = () => {
       return;
     }
 
-    if (tool === ToolType.BRUSH || tool === ToolType.ERASER) {
+    if (tool === ToolType.BRUSH || tool === ToolType.ERASER || tool === ToolType.SMART_REMOVE) {
       updateMask(pos, pos);
     }
 
@@ -302,7 +297,7 @@ const ImageEditor = () => {
       pc.moveTo(pos.x, pos.y);
       startPosRef.current = pos;
       draw();
-    } else if (selectedTool === ToolType.BRUSH || selectedTool === ToolType.ERASER) {
+    } else if (selectedTool === ToolType.BRUSH || selectedTool === ToolType.ERASER || selectedTool === ToolType.SMART_REMOVE) {
       updateMask(startPosRef.current, pos);
       startPosRef.current = pos;
       draw();
@@ -313,12 +308,42 @@ const ImageEditor = () => {
       ctx.fillStyle = "rgba(255, 0, 0, 0.4)";
       ctx.fillRect(startPosRef.current.x, startPosRef.current.y, pos.x - startPosRef.current.x, pos.y - startPosRef.current.y);
       ctx.restore();
-    } else if (selectedTool === ToolType.CROP && cropDragging && cropStartRef.current) {
-      const x = Math.min(pos.x, cropStartRef.current.x);
-      const y = Math.min(pos.y, cropStartRef.current.y);
-      const w = Math.abs(pos.x - cropStartRef.current.x);
-      const h = Math.abs(pos.y - cropStartRef.current.y);
-      setCropRect({ x, y, width: w, height: h });
+    } else if (selectedTool === ToolType.CROP) {
+      if (cropHandleRef.current && cropRect) {
+        const handle = cropHandleRef.current;
+        const x1 = cropRect.x, y1 = cropRect.y;
+        const x2 = x1 + cropRect.width, y2 = y1 + cropRect.height;
+        let nx = x1, ny = y1, nw = cropRect.width, nh = cropRect.height;
+        if (handle === "tl")        { nx = pos.x; ny = pos.y; nw = x2 - pos.x; nh = y2 - pos.y; }
+        else if (handle === "tc")   { ny = pos.y; nh = y2 - pos.y; }
+        else if (handle === "tr")   { ny = pos.y; nw = pos.x - x1; nh = y2 - pos.y; }
+        else if (handle === "ml")   { nx = pos.x; nw = x2 - pos.x; }
+        else if (handle === "mr")   { nw = pos.x - x1; }
+        else if (handle === "bl")   { nx = pos.x; nw = x2 - pos.x; nh = pos.y - y1; }
+        else if (handle === "bc")   { nh = pos.y - y1; }
+        else if (handle === "br")   { nw = pos.x - x1; nh = pos.y - y1; }
+        else if (handle === "move" && startPosRef.current) {
+          nx = x1 + (pos.x - startPosRef.current.x);
+          ny = y1 + (pos.y - startPosRef.current.y);
+          startPosRef.current = pos;
+        }
+        if (handle !== "move") {
+          const ratio = ASPECT_RATIOS[cropAspect];
+          if (ratio) {
+            if (handle === "tc" || handle === "bc") nw = nh * ratio;
+            else nh = nw / ratio;
+          }
+        }
+        if (nw > 5 && nh > 5) setCropRect({ x: nx, y: ny, width: nw, height: nh });
+      } else if (cropDragging && cropStartRef.current) {
+        let x = Math.min(pos.x, cropStartRef.current.x);
+        let y = Math.min(pos.y, cropStartRef.current.y);
+        let w = Math.abs(pos.x - cropStartRef.current.x);
+        let h = Math.abs(pos.y - cropStartRef.current.y);
+        const ratio = ASPECT_RATIOS[cropAspect];
+        if (ratio) h = w / ratio;
+        setCropRect({ x, y, width: w, height: h });
+      }
     }
   };
 
@@ -354,6 +379,7 @@ const ImageEditor = () => {
 
     if (tool === ToolType.CROP) {
       setCropDragging(false);
+      cropHandleRef.current = null;
       return;
     }
 
@@ -385,7 +411,7 @@ const ImageEditor = () => {
       case ToolType.ERASER: return "cell";
       case ToolType.CROP: return "crosshair";
       case ToolType.COLOR_PICKER: return "crosshair";
-      case ToolType.SMART_REMOVE: return `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${brushSize * 3}' height='${brushSize * 3}'><circle cx='${brushSize * 1.5}' cy='${brushSize * 1.5}' r='${brushSize * 1.5 - 1}' fill='rgba(255,0,0,0.2)' stroke='red' stroke-width='1.5'/></svg>") ${brushSize * 1.5} ${brushSize * 1.5}, crosshair`;
+      case ToolType.SMART_REMOVE: return `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${brushSize}' height='${brushSize}'><circle cx='${brushSize / 2}' cy='${brushSize / 2}' r='${brushSize / 2 - 1}' fill='rgba(251,146,60,0.25)' stroke='rgb(251,146,60)' stroke-width='1.5'/></svg>") ${brushSize / 2} ${brushSize / 2}, crosshair`;
       case ToolType.TEXT: return "text";
       case ToolType.PEN: return `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${brushSize}' height='${brushSize}'><circle cx='${brushSize / 2}' cy='${brushSize / 2}' r='${brushSize / 2 - 1}' fill='none' stroke='white' stroke-width='1.5'/></svg>") ${brushSize / 2} ${brushSize / 2}, crosshair`;
       default: return "default";
@@ -401,6 +427,31 @@ const ImageEditor = () => {
     const yPct = pos.y / canvasRef.current.height;
     useEditorStore.getState().addTextLayer("Text", xPct, yPct);
     setSelectedTool(ToolType.MOVE);
+  };
+
+  // ── Smart Remove helpers ──────────────────────────────────────────────
+  const handleSmartRemove = () => {
+    const mask = maskCanvasRef.current;
+    if (!mask) return;
+    setMask(mask.toDataURL("image/png"));
+    setPrompt("Remove the selected object from the image completely and fill the area with a seamless, natural-looking background that matches the surroundings");
+    setTimeout(() => {
+      generateEdit();
+      // Clear mask canvas after triggering
+      const ctx = mask.getContext("2d")!;
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, mask.width, mask.height);
+    }, 50);
+  };
+
+  const clearSmartRemoveMask = () => {
+    const mask = maskCanvasRef.current;
+    if (!mask) return;
+    const ctx = mask.getContext("2d")!;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, mask.width, mask.height);
+    setMask(mask.toDataURL("image/png"));
+    draw();
   };
 
   // ── Render ────────────────────────────────────────────────────────────
@@ -432,34 +483,43 @@ const ImageEditor = () => {
           {/* Crop overlay */}
           {selectedTool === ToolType.CROP && cropRect && (
             <div
-              className="absolute border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] pointer-events-none"
+              className="absolute border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"
               style={{
                 left: (cropRect.x / (canvasRef.current?.width || 1)) * 100 + "%",
                 top: (cropRect.y / (canvasRef.current?.height || 1)) * 100 + "%",
                 width: (cropRect.width / (canvasRef.current?.width || 1)) * 100 + "%",
                 height: (cropRect.height / (canvasRef.current?.height || 1)) * 100 + "%",
               }}
+              onPointerDown={(e) => e.stopPropagation()}
             >
+              {/* Move overlay */}
+              <div
+                className="absolute inset-0 z-10"
+                style={{ cursor: "move" }}
+                onPointerDown={handleCropHandleDown("move")}
+              />
               {/* Grid lines */}
-              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3">
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <div key={i} className="border border-white/30" />
                 ))}
               </div>
               {/* Handles */}
               {[
-                "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
-                "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                "top-0 right-0 translate-x-1/2 -translate-y-1/2",
-                "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2",
-                "top-1/2 right-0 translate-x-1/2 -translate-y-1/2",
-                "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
-                "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
-                "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
-              ].map((cls, i) => (
+                { cls: "top-0 left-0 -translate-x-1/2 -translate-y-1/2", handle: "tl", cursor: "nw-resize" },
+                { cls: "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2", handle: "tc", cursor: "n-resize" },
+                { cls: "top-0 right-0 translate-x-1/2 -translate-y-1/2", handle: "tr", cursor: "ne-resize" },
+                { cls: "top-1/2 left-0 -translate-x-1/2 -translate-y-1/2", handle: "ml", cursor: "w-resize" },
+                { cls: "top-1/2 right-0 translate-x-1/2 -translate-y-1/2", handle: "mr", cursor: "e-resize" },
+                { cls: "bottom-0 left-0 -translate-x-1/2 translate-y-1/2", handle: "bl", cursor: "sw-resize" },
+                { cls: "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2", handle: "bc", cursor: "s-resize" },
+                { cls: "bottom-0 right-0 translate-x-1/2 translate-y-1/2", handle: "br", cursor: "se-resize" },
+              ].map(({ cls, handle, cursor }) => (
                 <div
-                  key={i}
-                  className={`absolute w-3 h-3 bg-white rounded-sm border border-zinc-800 pointer-events-none ${cls}`}
+                  key={handle}
+                  className={`absolute w-3 h-3 bg-white rounded-sm border border-zinc-800 z-20 ${cls}`}
+                  style={{ cursor }}
+                  onPointerDown={handleCropHandleDown(handle)}
                 />
               ))}
             </div>
@@ -520,22 +580,63 @@ const ImageEditor = () => {
 
       {/* Crop action bar */}
       {selectedTool === ToolType.CROP && cropRect && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-xl px-4 py-2 z-30">
-          <span className="text-xs text-zinc-400">
-            {Math.round(cropRect.width)} × {Math.round(cropRect.height)} px
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-xl px-3 py-2 z-30 flex-wrap justify-center">
+          {/* Aspect ratio presets */}
+          <div className="flex items-center gap-0.5">
+            {(["free", "1:1", "4:3", "16:9", "3:2", "9:16"] as const).map((a) => (
+              <button
+                key={a}
+                onClick={() => setCropAspect(a)}
+                className={`text-[10px] px-1.5 py-0.5 rounded transition-colors font-medium ${
+                  cropAspect === a
+                    ? "bg-purple-600 text-white"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+          <div className="w-px h-4 bg-zinc-700" />
+          <span className="text-xs text-zinc-400 font-mono tabular-nums">
+            {Math.round(cropRect.width)} × {Math.round(cropRect.height)}
           </span>
           <div className="w-px h-4 bg-zinc-700" />
           <button
             onClick={() => useEditorStore.getState().applyCrop()}
             className="text-xs font-medium text-white bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded-lg transition-colors"
           >
-            Apply Crop
+            Apply
           </button>
           <button
             onClick={() => { setCropRect(null); setSelectedTool(ToolType.MOVE); }}
             className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Smart Remove action bar */}
+      {selectedTool === ToolType.SMART_REMOVE && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700 rounded-xl px-4 py-2 z-30">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+            <span className="text-xs text-zinc-400">Paint over the object to remove</span>
+          </div>
+          <div className="w-px h-4 bg-zinc-700" />
+          <button
+            onClick={handleSmartRemove}
+            disabled={isLoading}
+            className="text-xs font-medium text-white bg-orange-600 hover:bg-orange-500 disabled:opacity-50 px-3 py-1 rounded-lg transition-colors"
+          >
+            Remove Object
+          </button>
+          <button
+            onClick={clearSmartRemoveMask}
+            className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+          >
+            Clear
           </button>
         </div>
       )}

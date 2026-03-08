@@ -145,7 +145,7 @@ Local non-AI visual effects applied directly to pixel data.
 ### Keyboard Shortcuts
 Full keyboard shortcut system for tools, history, and canvas navigation.
 
-- **Shortcuts**: `M` Move, `B` Brush, `E` Eraser, `C` Crop, `T` Text, `P` Color picker, `W` Smart remove, `Esc` Return to Move, `Ctrl+Z` Undo, `Ctrl+Y` Redo, `[` Brush size −10, `]` Brush size +10, `Space+drag` Pan canvas.
+- **Shortcuts**: `M` Move, `B` Brush, `E` Eraser, `C` Crop, `T` Text, `P` Color picker, `W` Smart remove, `N` Pen, `Esc` Return to Move, `Ctrl+Z` Undo, `Ctrl+Y` Redo, `[` Brush size −10, `]` Brush size +10, `Space+drag` Pan canvas, `?` Open keyboard shortcuts modal.
 - **Frontend**: `useKeyboardShortcuts` hook registered in editor page. Help modal (`KeyboardShortcutModal`) accessible via `?` keyboard icon button in navbar. Modal shows all shortcuts grouped by category.
 - **Files**: `src/hooks/useKeyboardShortcuts.ts`, `src/components/keyboard-shortcut-modal.tsx`.
 
@@ -187,6 +187,50 @@ Displays current canvas dimensions and zoom level at the bottom-left of the canv
 
 ---
 
+## Editor — Phase 3 Features
+
+### Pen / Freehand Drawing Tool
+Draw directly on the canvas with a freehand pen using any color.
+
+- **Usage**: Select the Pen tool (`PenLine` icon in sidebar, keyboard shortcut `N`). Pick a color from the color input below the tool buttons. Draw on the canvas — strokes are composited live onto a separate overlay canvas, then baked into the image history on pointer-up.
+- **Frontend**: Separate `penCanvasRef` overlay rendered on top of `imgRef` in `image-editor.tsx`. Custom circular SVG cursor matching pen color. Pen color input in left sidebar (shown when Pen tool is active).
+- **Store**: `penColor` state, `setPenColor()`, `commitCanvas(dataUrl)` — bakes the composited result into history.
+- **Credits**: Free — local canvas operation.
+
+### Blank Canvas
+Start from scratch without uploading or generating an image.
+
+- **Usage**: Switch to the "Blank" tab in the editor empty state. Choose a size preset and background color, then click "Create Canvas".
+- **Size presets**: 512×512, 768×768, 1024×1024, 1280×720, 1920×1080.
+- **Color options**: Quick swatches (white, black, dark navy, cream) + custom color picker.
+- **Frontend**: Third tab in editor empty state tab switcher. `handleCreateBlank()` creates a canvas element, fills it with the chosen color, and calls `setImage()`.
+- **Files**: `src/app/(protected)/editor/page.tsx`.
+- **Credits**: Free.
+
+### AI Background Replace
+Replace the background of an image with an AI-generated scene while keeping the main subject perfectly intact.
+
+- **Usage**: Open "Background Replace" accordion in the left sidebar. Describe the new background scene and click "Replace Background".
+- **Frontend**: Background Replace accordion item in left sidebar with a text input for the scene description and a Replace button (requires image + non-empty scene).
+- **Backend**: `POST /api/edit-image` with a constructed prompt specifying to preserve the subject and replace only the background. Deducts 1 credit.
+- **Store**: `replaceBackground(scene: string)` in `useEditorStore`.
+
+### Toast Notifications
+Feedback toasts for all AI operations — success and error states.
+
+- **Library**: `sonner` v2.0.7 with `theme="dark"`, `position="bottom-right"`, `richColors`.
+- **Triggers**: Every AI action in `useEditorStore` (generateEdit, generateFromPrompt, applyFilter, applyExpansion, removeBackground, enhanceImage, enhanceFace, applyBlend, recolorArea, replaceBackground) calls `toast.success()` on completion and `toast.error()` on failure.
+- **Frontend**: `<Toaster />` mounted in root layout (`src/app/layout.tsx`).
+
+### Recent Colors (Color Picker Tool)
+Tracks recently picked colors and displays them as swatches in the sidebar for quick reuse.
+
+- **Usage**: Use the Color Picker tool (`P`) to sample a color from the canvas. The color is added to the recent colors history.
+- **Frontend**: Recent colors swatch row shown in left sidebar when Color Picker tool is active (up to 8 colors, deduplicated, most recent first). Click a swatch to re-select that color.
+- **Store**: `recentColors: string[]` state, updated in `setPickedColor()`.
+
+---
+
 ## Usage Credits
 
 ### Credit System
@@ -201,16 +245,40 @@ Each new user receives **20 free credits**. Every successful AI generation (edit
 ## Gallery
 
 ### Personal Gallery
-Browse all saved images in a responsive grid. Toggle each image between public and private. Delete images. Add images to collections via hover overlay.
+Browse all saved images in a responsive grid. Toggle each image between public and private. Delete, download, or share images. Add images to collections via hover overlay.
 
 - **Frontend**: `/gallery/user` page with Images and Collections tabs.
 - **Backend**: `GET /api/images` (paginated list), `DELETE /api/images/[id]`, `PATCH /api/images/[id]` (toggle isPublic / update title).
+
+### Gallery Search
+Filter saved images in real-time by title or prompt text.
+
+- **Frontend**: Search input shown above the image grid (visible when images exist). Client-side filtering via `filteredImages` derived from `searchQuery` state. Shows a "no results" message when no images match.
+- **Files**: `src/app/(protected)/gallery/user/page.tsx`.
+
+### Gallery Image Download
+Download any saved image directly from the gallery without opening the editor.
+
+- **Frontend**: Download button (`Download` icon) in the image hover overlay, alongside the share and delete buttons. Triggers a programmatic `<a download>` click using the image's base64 data URL.
+- **Files**: `src/app/(protected)/gallery/user/page.tsx`.
 
 ### Public Community Gallery
 Browse all images marked as public by any user. Masonry grid layout with hover to reveal the prompt. Author avatar and name shown per image. Server-rendered with 60-second revalidation.
 
 - **Frontend**: `/gallery` page (public, no auth required). Accessible from dashboard.
 - **Backend**: `GET /api/gallery` returns paginated public images with user info.
+
+---
+
+## Dashboard
+
+### Usage Stats Widget
+At-a-glance summary of the user's activity shown on the dashboard.
+
+- **Metrics**: Images Saved (total), Public Images, Credits Used, Credits Remaining. Credits remaining is color-coded green (> 5) or red (≤ 5).
+- **Frontend**: Stats grid between the "Open Editor" card and the gallery nav links in `/dashboard`. Fetches from `/api/stats` on mount.
+- **Backend**: `GET /api/stats` — returns `{ totalImages, publicImages, creditsUsed, creditsRemaining }` using `prisma.generatedImage.count()` and user credit balance.
+- **Files**: `src/app/(protected)/dashboard/page.tsx`, `src/app/api/stats/route.ts`.
 
 ---
 
