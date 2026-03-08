@@ -39,7 +39,7 @@ export function Navbar({
 
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.download = `codersbanana-${Date.now()}.png`;
+    link.download = `imggen-${Date.now()}.png`;
     link.href = image as string;
     link.click();
   };
@@ -55,15 +55,15 @@ export function Navbar({
           <div className="relative h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-violet-600/10 border border-purple-500/20">
             <Image
               src="/logo.png"
-              alt="Coder's Banana Logo"
+              alt="ImgGen Logo"
               fill
               className="object-cover p-0.5"
               priority
             />
           </div>
           <span className="text-zinc-100 hidden md:block tracking-tight text-base">
-            {`Coder's`}
-            <span className="text-purple-400">Banana</span>
+            Img
+            <span className="text-purple-400">Gen</span>
           </span>
         </Link>
       </div>
