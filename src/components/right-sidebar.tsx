@@ -29,51 +29,58 @@ export const RightSidebar = () => {
   };
 
   return (
-    <aside className="flex h-full w-40 flex-col shrink-0 border-l border-zinc-800 bg-zinc-950/50 z-20 overflow-hidden">
+    <aside className="flex h-full w-44 flex-col shrink-0 border-l border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl z-20 overflow-hidden">
+      {/* Header */}
+      <div className="px-3 py-2.5 border-b border-zinc-800/30">
+        <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">
+          History
+        </h3>
+      </div>
+
       <div className="flex-1 min-h-0 w-full">
         <ScrollArea className="h-full w-full">
-          <div className="flex flex-col gap-4 p-4 pb-4">
-            {/* conditional reder to this if not images in history */}
-            {/* <div className="text-center py-10">
-              <span className="text-xs text-zinc-600">No history yet</span>
-            </div> */}
+          <div className="flex flex-col gap-2 p-2.5">
+            {history.length === 0 && (
+              <div className="text-center py-10">
+                <span className="text-xs text-zinc-600">No history yet</span>
+              </div>
+            )}
 
             {history.map((imgState, idx) => {
               const isActive = historyIndex === idx;
 
               return (
-                // todo: generate unique id for each image in the history
                 <div className="relative group" key={idx}>
                   <button
-                    onClick={() => {
-                      setHistoryIndex(idx);
-                    }}
+                    onClick={() => setHistoryIndex(idx)}
                     className={cn(
-                      "relative w-full aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200",
+                      "relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200",
                       isActive
-                        ? "border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
-                        : "border-zinc-800 hover:border-zinc-600 opacity-60 hover:opacity-100",
-                    )}>
+                        ? "border-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.25)]"
+                        : "border-zinc-800/50 hover:border-zinc-600 opacity-50 hover:opacity-100",
+                    )}
+                  >
                     <Image
                       width={500}
                       height={500}
                       src={imgState}
-                      alt={`Version ${1}`}
+                      alt={`Version ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
 
                     {isActive && (
-                      <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none" />
+                      <div className="absolute inset-0 bg-purple-500/5 pointer-events-none" />
                     )}
                   </button>
 
                   <div
                     className={cn(
-                      "absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold shadow-md z-10 pointer-events-none",
+                      "absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-md text-[9px] font-bold shadow-md z-10 pointer-events-none",
                       isActive
-                        ? "bg-yellow-500 text-zinc-950"
-                        : "bg-zinc-800 text-zinc-400 border border-zinc-700",
-                    )}>
+                        ? "bg-purple-500 text-white"
+                        : "bg-zinc-900/80 text-zinc-500 border border-zinc-700/50 backdrop-blur-sm",
+                    )}
+                  >
                     {idx + 1}
                   </div>
                 </div>
@@ -83,24 +90,23 @@ export const RightSidebar = () => {
         </ScrollArea>
       </div>
 
-      {/* Footer is strictly separated so it stays at bottom */}
-      <div className="p-3 border-t border-zinc-800 shrink-0 bg-zinc-950/80 backdrop-blur-sm z-30">
+      {/* Footer */}
+      <div className="p-2 border-t border-zinc-800/30 shrink-0">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded-lg"
+                className="w-full text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg h-8"
                 onClick={clearHistory}
-                disabled={history.length <= 1}>
-                <Trash2 size={14} className="mr-2" />
-                <span className="text-xs">
-                  Clear History
-                </span>
+                disabled={history.length <= 1}
+              >
+                <Trash2 size={12} className="mr-1.5" />
+                <span className="text-[10px]">Clear History</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="left">
+            <TooltipContent side="left" className="text-xs">
               <p>Clear all except current</p>
             </TooltipContent>
           </Tooltip>

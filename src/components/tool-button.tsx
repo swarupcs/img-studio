@@ -1,5 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const ToolButton = ({
   active,
@@ -12,18 +18,27 @@ export const ToolButton = ({
   icon: React.ReactNode;
   label?: string;
 }) => (
-  <Button
-    variant={active ? "secondary" : "outline"}
-    size="icon"
-    onClick={onClick}
-    className={cn(
-      "w-full h-12 rounded-xl transition-all duration-200 cursor-pointer",
-      active
-        ? "bg-yellow-500 text-zinc-950 hover:bg-yellow-400 border-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.4)]"
-        : "bg-zinc-900/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-zinc-800"
-    )}
-    title={label}
-  >
-    {icon}
-  </Button>
+  <TooltipProvider delayDuration={300}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant={active ? "secondary" : "outline"}
+          size="icon"
+          onClick={onClick}
+          className={cn(
+            "w-full h-10 rounded-lg transition-all duration-200 cursor-pointer",
+            active
+              ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/25 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+              : "bg-zinc-900/30 text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-300 border-zinc-800/40",
+          )}
+          title={label}
+        >
+          {icon}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        {label}
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 );

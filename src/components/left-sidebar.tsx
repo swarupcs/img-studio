@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { Slider } from "@/components/ui/slider";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
@@ -38,115 +37,97 @@ export const LeftSidebar = () => {
   } = useEditorStore();
 
   return (
-    <aside className="hidden md:flex w-80 flex-col border-r border-zinc-800 bg-zinc-950/50 z-20 shrink-0 h-full">
+    <aside className="hidden md:flex w-72 flex-col border-r border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl z-20 shrink-0 h-full">
       <ScrollArea className="h-full w-full">
-        <div className="p-4 space-y-6">
-          {/* 1. Tools Grid */}
-          <div className="px-4 space-y-2 bg-zinc-800/50 p-3 rounded-xl">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+        <div className="p-3 space-y-3">
+          {/* 1. Tools Section */}
+          <div className="space-y-3 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/30">
+            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest px-1">
               Tools
             </h3>
-            <Separator className="bg-zinc-800" />
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               <ToolButton
                 active={selectedTool === ToolType.MOVE}
-                onClick={() => {
-                  setSelectedTool(ToolType.MOVE);
-                }}
-                icon={<Hand size={18} />}
+                onClick={() => setSelectedTool(ToolType.MOVE)}
+                icon={<Hand size={16} />}
                 label="Pan"
               />
               <ToolButton
                 active={selectedTool === ToolType.RECTANGLE}
-                onClick={() => {
-                  setSelectedTool(ToolType.RECTANGLE);
-                }}
-                icon={<Square size={18} />}
+                onClick={() => setSelectedTool(ToolType.RECTANGLE)}
+                icon={<Square size={16} />}
                 label="Select"
               />
               <ToolButton
                 active={selectedTool === ToolType.BRUSH}
-                onClick={() => {
-                  setSelectedTool(ToolType.BRUSH);
-                }}
-                icon={<Brush size={18} />}
+                onClick={() => setSelectedTool(ToolType.BRUSH)}
+                icon={<Brush size={16} />}
                 label="Brush"
               />
               <ToolButton
                 active={selectedTool === ToolType.ERASER}
-                onClick={() => {
-                  setSelectedTool(ToolType.ERASER);
-                }}
-                icon={<Eraser size={18} />}
+                onClick={() => setSelectedTool(ToolType.ERASER)}
+                icon={<Eraser size={16} />}
                 label="Erase"
               />
             </div>
 
-            {/* 2. Brush Size */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            {/* Brush Size */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex justify-between items-center px-1">
+                <span className="text-[10px] font-medium text-zinc-500 uppercase tracking-wider">
                   Size
-                </h3>
-                <span className="text-xs font-mono text-zinc-200 bg-zinc-900 border border-zinc-800 px-2 py-1 rounded">
-                  10px
+                </span>
+                <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">
+                  {brushSize}px
                 </span>
               </div>
 
-              {/* Custom styled slider to force yellow theme regardless of global primary color */}
               <Slider
                 defaultValue={[brushSize]}
                 max={100}
                 min={5}
                 step={1}
-                onValueChange={(value) => {
-                  setBrushSize(value[0]);
-                }}
-                className="py-2 [&>.relative>.absolute]:bg-yellow-500 **:[[role=slider]]:border-yellow-500 **:[[role=slider]]:bg-zinc-950 **:[[role=slider]]:ring-offset-zinc-950 **:[[role=slider]]:focus-visible:ring-yellow-500"
+                onValueChange={(value) => setBrushSize(value[0])}
+                className="py-1.5 [&>.relative>.absolute]:bg-purple-500 **:[[role=slider]]:border-purple-500 **:[[role=slider]]:bg-zinc-950 **:[[role=slider]]:ring-offset-zinc-950 **:[[role=slider]]:focus-visible:ring-purple-500"
               />
             </div>
           </div>
 
-          <Separator className="bg-zinc-800" />
-
-          {/* 3. AI Accordions */}
-          <div className="px-4 space-y-2 bg-zinc-800/50 p-3 rounded-xl">
-            <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-              Options
+          {/* 2. AI Options Section */}
+          <div className="space-y-2 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/30">
+            <h3 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest px-1">
+              AI Options
             </h3>
-
-            <Separator className="bg-zinc-800" />
 
             <Accordion
               type="single"
               collapsible
               className="w-full"
-              defaultValue="options">
-              {/* Item 1: Editing Options */}
-              <AccordionItem
-                value="options"
-                className="border-zinc-800">
-                <AccordionTrigger className="text-zinc-200 hover:text-yellow-500 hover:no-underline py-3 transition-colors">
+              defaultValue="filters"
+            >
+              {/* AI Editing Options */}
+              <AccordionItem value="options" className="border-zinc-800/30">
+                <AccordionTrigger className="text-zinc-300 hover:text-purple-400 hover:no-underline py-2.5 transition-colors text-sm">
                   <div className="flex items-center gap-2">
-                    <Sparkles size={16} />
-                    <span className="text-sm">
-                      AI Editing Options
+                    <Sparkles size={14} className="text-purple-400" />
+                    <span className="text-xs font-medium">
+                      Editing Options
                     </span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-4 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
+                <AccordionContent className="pt-1 pb-3 space-y-1.5">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <GridItem
                       icon={Delete}
-                      label={"Remove Background"}
-                      // desc={"clear background"}
+                      label={"Remove BG"}
                       onClick={() => {}}
                       disabled={true}
                     />
                     <GridItem
                       icon={Sparkles}
-                      label={"AI Refreshment"}
+                      label={"AI Enhance"}
                       desc={""}
                       onClick={() => {}}
                       disabled={true}
@@ -155,61 +136,47 @@ export const LeftSidebar = () => {
                 </AccordionContent>
               </AccordionItem>
 
-              {/* Item 2: AI Filters */}
-              <AccordionItem
-                value="filters"
-                className="border-zinc-800">
-                <AccordionTrigger className="text-zinc-200 hover:text-yellow-500 hover:no-underline py-3 transition-colors">
+              {/* AI Filters */}
+              <AccordionItem value="filters" className="border-zinc-800/30">
+                <AccordionTrigger className="text-zinc-300 hover:text-purple-400 hover:no-underline py-2.5 transition-colors text-sm">
                   <div className="flex items-center gap-2">
-                    <ImageIcon size={16} />
-                    <span className="text-sm">
-                      AI Filters
-                    </span>
+                    <ImageIcon size={14} className="text-purple-400" />
+                    <span className="text-xs font-medium">Filters</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    {filters.map((item, index) => {
-                      return (
-                        <GridItem
-                          key={index}
-                          image={item.image}
-                          label={item.name}
-                          desc={item.prompt}
-                          onClick={() => {
-                            applyFilter(item.prompt);
-                          }}
-                          disabled={isLoading}
-                        />
-                      );
-                    })}
+                <AccordionContent className="pt-1 pb-3">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {filters.map((item, index) => (
+                      <GridItem
+                        key={index}
+                        image={item.image}
+                        label={item.name}
+                        desc={item.prompt}
+                        onClick={() => applyFilter(item.prompt)}
+                        disabled={isLoading}
+                      />
+                    ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
-              {/* Item 3: AI Expansion */}
-              <AccordionItem
-                value="expansion"
-                className="border-none">
-                <AccordionTrigger className="text-zinc-200 hover:text-yellow-500 hover:no-underline py-3 transition-colors">
+              {/* AI Expansion */}
+              <AccordionItem value="expansion" className="border-none">
+                <AccordionTrigger className="text-zinc-300 hover:text-purple-400 hover:no-underline py-2.5 transition-colors text-sm">
                   <div className="flex items-center gap-2">
-                    <Maximize size={16} />
-                    <span className="text-sm">
-                      AI Expansion
-                    </span>
+                    <Maximize size={14} className="text-purple-400" />
+                    <span className="text-xs font-medium">Expansion</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-4">
-                  <div className="grid grid-cols-2 gap-2">
+                <AccordionContent className="pt-1 pb-3">
+                  <div className="grid grid-cols-2 gap-1.5">
                     {ratios.map((r) => (
                       <GridItem
                         key={r.label}
                         icon={r.icon}
                         label={r.label}
                         desc={r.desc}
-                        onClick={() => {
-                          applyExpansion(r.aspectRatio);
-                        }}
+                        onClick={() => applyExpansion(r.aspectRatio)}
                         disabled={false}
                       />
                     ))}
