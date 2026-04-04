@@ -28,7 +28,7 @@ export function Navbar() {
 
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.download = `codersbanana-${Date.now()}.png`;
+    link.download = `imgstudio-${Date.now()}.png`;
     link.href = image as string;
     link.click();
   };
@@ -40,18 +40,18 @@ export function Navbar() {
         <Link
           className="flex items-center gap-2 font-bold text-xl hover:opacity-90 transition-opacity"
           href="/">
-          <div className="relative h-11 w-11 overflow-hidden rounded-xl flex items-center justify-center">
+          {/* <div className="relative h-11 w-11 overflow-hidden rounded-xl flex items-center justify-center">
             <Image
               src="/logo.png"
-              alt="Coder's Banana Logo"
+              alt="ImgStudio AI Logo"
               fill
               className="object-cover p-1"
               priority
             />
-          </div>
+          </div> */}
           <span className="text-zinc-100 hidden md:block tracking-tight">
-            {`Coder's`}
-            <span className="text-yellow-500">Banana</span>
+            {`ImgStudio `}
+            <span className="text-yellow-500">AI</span>
           </span>
         </Link>
       </div>

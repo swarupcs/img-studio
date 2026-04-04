@@ -14,14 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodersBanana",
-  description: "AI Image Editor",
-  keywords: "codersbanana,codersgyan",
-  creator: "codersgyan",
+  title: 'ImgStudio AI',
+  description: 'AI Image Editor',
+  keywords: 'imgstudio,ai,image editor',
+  creator: 'imgstudio',  
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
+    icon: '/favicon.ico',
+    // shortcut: '/favicon-16x16.png',
+    // apple: '/apple-touch-icon.png',
   },
 };
 
