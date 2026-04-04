@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 export const ratios = [
-  // Square
   {
     label: "Square (1:1)",
     value: 1,
@@ -18,8 +17,6 @@ export const ratios = [
     icon: Square,
     desc: "Instagram Feed",
   },
-
-  // Landscape / Wide
   {
     label: "Wide (16:9)",
     value: 16 / 9,
@@ -48,8 +45,6 @@ export const ratios = [
     icon: Film,
     desc: "Ultrawide",
   },
-
-  // Portrait / Tall
   {
     label: "Story (9:16)",
     value: 9 / 16,
@@ -109,4 +104,27 @@ export enum ToolType {
   RECTANGLE = "RECTANGLE",
   BRUSH = "BRUSH",
   ERASER = "ERASER",
+  CROP = "CROP",
+  TEXT = "TEXT",
+  COLOR_PICKER = "COLOR_PICKER",
+  SMART_REMOVE = "SMART_REMOVE",
+  PEN = "PEN",
 }
+
+export const PROMPT_TEMPLATES = [
+  { label: "Golden Hour", prompt: "Transform the lighting to a warm golden hour sunset. Soft orange and pink tones, long shadows, glowing highlights on surfaces." },
+  { label: "Add Rain", prompt: "Add heavy rain effect to the scene. Streaking rain drops, wet surfaces with reflections, moody overcast atmosphere." },
+  { label: "Pencil Sketch", prompt: "Convert this image to a detailed pencil sketch. Clean graphite lines, cross-hatching for shadows, white paper background." },
+  { label: "Neon Night", prompt: "Transform to a neon-lit night scene. Vivid neon signs reflecting off wet streets, dark atmosphere with glowing cyan and magenta lights." },
+  { label: "Cinematic", prompt: "Apply cinematic color grading with widescreen letterbox bars. Film grain, lifted shadows, warm highlight tones, desaturated midtones." },
+  { label: "Soft Portrait", prompt: "Apply a soft focus portrait effect. Gentle bokeh background blur, smooth skin tones, dreamy ethereal quality with warm light." },
+  { label: "Vintage Film", prompt: "Apply vintage film photography effect. Faded colors, light leaks, visible grain, slight vignette, warm brownish tones." },
+  { label: "Snow Scene", prompt: "Add realistic snowfall to the scene. Snowflakes mid-air, snow accumulation on surfaces, cold blue-white ambient light." },
+];
+
+export const STICKER_CATEGORIES: Record<string, string[]> = {
+  Faces: ["😀", "😂", "😍", "🤩", "😎", "🥳", "😭", "🔥"],
+  Nature: ["🌸", "🌊", "⚡", "🌙", "⭐", "🌈", "🍀", "🌺"],
+  Objects: ["❤️", "💎", "🎉", "🎨", "🏆", "🎵", "🚀", "💡"],
+  Symbols: ["✨", "💫", "🔮", "👑", "💯", "🎯", "🌟", "💥"],
+};

@@ -1,3 +1,11 @@
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+function getMimeType(dataUrl: string): string {
+  const match = dataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,/);
+  return match ? match[1] : "image/png";
 import { NextResponse } from 'next/server';
 import { GenerateContentResponse, GoogleGenAI } from '@google/genai';
 import sharp from 'sharp';
@@ -50,6 +58,27 @@ async function fixImageOrientation(base64: string): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { credits: true },
+  });
+
+  if (!user || user.credits <= 0) {
+    return NextResponse.json(
+      { error: "Insufficient credits", credits: 0 },
+      { status: 402 }
+    );
+  }
+
+  const { imageBase64, prompt, userFiles, aspectRatio, maskBase64 } =
+    await request.json();
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const { imageBase64, prompt, userFiles, aspectRatio, maskBase64 } =
     await request.json();
 
@@ -85,6 +114,12 @@ export async function POST(request: Request) {
   }
 
   if (userFiles && Array.isArray(userFiles) && userFiles.length > 0) {
+    const processedFiles = userFiles.map((file: { url: string }) => ({
+      inlineData: {
+        mimeType: getMimeType(file.url),
+        data: cleanBase64Image(file.url),
+      },
+    }));
     const processedFiles = await Promise.all(
       userFiles.map(async (file) => {
         const fixed = await fixImageOrientation(cleanBase64Image(file.url));
@@ -104,6 +139,7 @@ export async function POST(request: Request) {
     model: 'gemini-2.5-flash-image',
     contents: [{ role: 'user', parts }],
     config: {
+      imageConfig: { aspectRatio: aspectRatio || undefined },
       responseModalities: ['TEXT', 'IMAGE'],
       imageConfig: {
         aspectRatio: aspectRatio || undefined,
@@ -118,6 +154,21 @@ export async function POST(request: Request) {
       if (part.text) {
         console.log(part.text);
       } else if (part.inlineData) {
+        const updated = await prisma.user.update({
+          where: { id: session.user.id },
+          data: { credits: { decrement: 1 } },
+          select: { credits: true },
+        });
+
+        return NextResponse.json({
+          result: `data:image/png;base64,${part.inlineData.data}`,
+          credits: updated.credits,
+        });
+      }
+    }
+  }
+
+  return NextResponse.json({ error: "Failed to generate the image" }, { status: 500 });
         const imageData = part.inlineData.data;
         const mimeType = part.inlineData.mimeType ?? 'image/png';
         return NextResponse.json({
