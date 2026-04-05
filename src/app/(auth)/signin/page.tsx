@@ -49,7 +49,7 @@ export default function SignInPage() {
         <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">
           Welcome back
         </h1>
-        <p className="text-zinc-500 text-sm">Sign in to your ImgGen account</p>
+        <p className="text-zinc-500 text-sm">Sign in to your ImgStudio account</p>
       </div>
 
       {/* OAuth first */}

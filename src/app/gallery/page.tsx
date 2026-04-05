@@ -62,17 +62,8 @@ export default async function PublicGalleryPage() {
       {/* Navbar */}
       <header className='relative z-10 h-14 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl flex items-center justify-between px-4 md:px-6'>
         <Link href='/' className='flex items-center gap-2.5 font-bold text-lg'>
-          <div className='relative h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-violet-600/10 border border-purple-500/20'>
-            <Image
-              src='/logo.png'
-              alt='ImgGen'
-              fill
-              className='object-cover p-0.5'
-              priority
-            />
-          </div>
           <span className='text-zinc-100 tracking-tight text-base'>
-            Img<span className='text-purple-400'>Gen</span>
+            Img<span className='text-purple-400'>Studio</span>
           </span>
         </Link>
         <Link href='/dashboard'>
@@ -89,7 +80,7 @@ export default async function PublicGalleryPage() {
             Community Gallery
           </h1>
           <p className='text-zinc-500 text-base max-w-sm mx-auto'>
-            Creations shared by ImgGen users. Share yours by marking images
+            Creations shared by ImgStudio users. Share yours by marking images
             public.
           </p>
         </div>

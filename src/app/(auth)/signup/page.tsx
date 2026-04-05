@@ -77,7 +77,7 @@ export default function SignUpPage() {
           Create an account
         </h1>
         <p className="text-zinc-500 text-sm">
-          Get started with ImgGen for free
+          Get started with ImgStudio for free
         </p>
       </div>
 

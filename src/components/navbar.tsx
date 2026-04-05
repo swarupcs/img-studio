@@ -189,16 +189,6 @@ export function Navbar({
             className='flex items-center gap-2.5 font-bold text-lg hover:opacity-90 transition-opacity'
             href='/dashboard'
           >
-            <div className='relative h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center bg-linear-to-br from-purple-500/10 to-violet-600/10 border border-purple-500/20'>
-              <Image
-                src='/logo.png'
-                alt='ImgStudio AI Logo'
-                width={36}
-                height={36}
-                className='object-cover rounded-md'
-                priority
-              />
-            </div>
             <span className='text-zinc-100 hidden md:block tracking-tight'>
               {`ImgStudio `}
               <span className='text-yellow-500'>AI</span>

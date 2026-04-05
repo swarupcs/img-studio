@@ -27,17 +27,8 @@ export default function AuthLayout({
 
         {/* Logo + wordmark */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-purple-500/20 to-violet-600/20 rounded-xl border border-purple-500/20 flex items-center justify-center overflow-hidden shrink-0">
-            <Image
-              src="/logo.png"
-              width={36}
-              height={36}
-              alt="ImgGen"
-              className="object-cover p-0.5"
-            />
-          </div>
           <span className="text-zinc-100 font-semibold text-lg tracking-tight">
-            ImgGen
+            ImgStudio
           </span>
         </div>
 
@@ -77,7 +68,7 @@ export default function AuthLayout({
         {/* Bottom */}
         <div className="relative z-10">
           <p className="text-zinc-600 text-xs">
-            &copy; {new Date().getFullYear()} ImgGen. All rights reserved.
+            &copy; {new Date().getFullYear()} ImgStudio. All rights reserved.
           </p>
         </div>
       </div>

@@ -235,17 +235,9 @@ export default function ProfilePage() {
           href="/dashboard"
           className="flex items-center gap-2.5 font-bold text-lg"
         >
-          <div className="relative h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-violet-600/10 border border-purple-500/20">
-            <Image
-              src="/logo.png"
-              alt="ImgGen Logo"
-              fill
-              className="object-cover p-0.5"
-              priority
-            />
-          </div>
+
           <span className="text-zinc-100 tracking-tight text-base">
-            Img<span className="text-purple-400">Gen</span>
+            Img<span className="text-purple-400">Studio</span>
           </span>
         </Link>
 

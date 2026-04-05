@@ -1,4 +1,4 @@
-# ImgGen — Feature Documentation
+# ImgStudio — Feature Documentation
 
 Complete list of all implemented features. Updated after each successful implementation.
 
@@ -176,7 +176,7 @@ Add emoji stickers as draggable text layers over the image.
 Generate a public URL for any saved image to share outside the app.
 
 - **Usage**: In My Gallery, click the link icon on any image to copy its public URL. If the image is private, it is automatically made public first.
-- **Frontend**: Link2 icon button in gallery image hover overlay with "Copied!" feedback state. Public page at `/p/[id]` shows the image, title, prompt, author, and a "Try ImgGen" CTA.
+- **Frontend**: Link2 icon button in gallery image hover overlay with "Copied!" feedback state. Public page at `/p/[id]` shows the image, title, prompt, author, and a "Try ImgStudio" CTA.
 - **Backend**: No new API needed — uses existing `PATCH /api/images/[id]` to set `isPublic: true`. Public page fetches directly from Prisma (server component).
 - **Files**: `src/app/p/[id]/page.tsx`. Route allowlisted in `src/middleware.ts`.
 

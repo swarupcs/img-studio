@@ -162,15 +162,6 @@ export default function EditorPage() {
               <div className="w-full h-full flex items-center justify-center p-6 md:p-10">
                 {!image ? (
                   <div className="text-center space-y-6 max-w-md z-10 w-full">
-                    {/* Logo */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-violet-600/20 rounded-2xl border border-purple-500/20 flex items-center justify-center mx-auto backdrop-blur-sm animate-pulse-glow">
-                      <Image
-                        src="/logo.png"
-                        width={500}
-                        height={500}
-                        alt="logo"
-                      />
-                    </div>
 
                     {/* Tab switcher */}
                     <div className="flex bg-zinc-900/50 border border-zinc-800 rounded-xl p-1 gap-1">
