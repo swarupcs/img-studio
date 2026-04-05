@@ -29,15 +29,11 @@ import {
   PromptInputButton,
   PromptInputFooter,
   type PromptInputMessage,
-  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
   usePromptInputAttachments,
-  usePromptInputController,
 } from "@/components/ai-elements/prompt-input";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { useEditorStore } from "@/store/useEditorState";
 import { CheckIcon, GlobeIcon } from "lucide-react";
 import { useState } from "react";
@@ -90,8 +86,6 @@ const models = [
   },
 ];
 
-const SUBMITTING_TIMEOUT = 200;
-const STREAMING_TIMEOUT = 2000;
 
 const PromptInputAttachmentsDisplay = () => {
   const attachments = usePromptInputAttachments();
@@ -126,11 +120,7 @@ export const AIPromptInput = () => {
   } = useEditorStore();
 
   const [model, setModel] = useState<string>(models[0].id);
-  const [modelSelectorOpen, setModelSelectorOpen] =
-    useState(false);
-  const [status, setStatus] = useState<
-    "submitted" | "streaming" | "ready" | "error"
-  >("ready");
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
   const selectedModelData = models.find(
     (m) => m.id === model,
@@ -146,24 +136,13 @@ export const AIPromptInput = () => {
       return;
     }
 
-    // setStatus("submitted");
-    // store to global store
-
     setPrompt(message.text);
     setUserFiles(message.files);
     generateEdit();
-
-    // eslint-disable-next-line no-console
-    console.log("Submitting message:", message);
-
-    setTimeout(() => {
-      setStatus("streaming");
-    }, SUBMITTING_TIMEOUT);
-
-    setTimeout(() => {
-      setStatus("ready");
-    }, STREAMING_TIMEOUT);
   };
+
+  // Derive status from isLoading so the submit button reflects actual AI state
+  const status = isLoading ? "streaming" : "ready";
 
   return (
     <div className="size-full">

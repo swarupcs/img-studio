@@ -15,7 +15,9 @@ export async function GET() {
     prisma.generatedImage.count({ where: { userId: session.user.id, isPublic: true } }),
   ]);
 
-  const creditsUsed = Math.max(0, 20 - (user?.credits ?? 0));
-
-  return NextResponse.json({ totalImages, publicImages, creditsUsed, creditsRemaining: user?.credits ?? 0 });
+  return NextResponse.json({
+    totalImages,
+    publicImages,
+    creditsRemaining: user?.credits ?? 0,
+  });
 }

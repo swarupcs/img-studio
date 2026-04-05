@@ -24,7 +24,6 @@ import {
   RotateCcw,
   FlipHorizontal2,
   FlipVertical2,
-  RotateCcw as RotateCcwIcon,
   RotateCw,
   Aperture,
   Sparkle,
@@ -280,7 +279,7 @@ export const LeftSidebar = () => {
                 title="Rotate 90° Left"
                 className="flex flex-col items-center gap-1 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50 hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <RotateCcwIcon size={15} />
+                <RotateCcw size={15} />
                 <span className="text-[9px]">Rot L</span>
               </button>
               <button
