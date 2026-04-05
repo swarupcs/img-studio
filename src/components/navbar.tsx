@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Download,
@@ -17,9 +17,16 @@ import {
   SplitSquareHorizontal,
   Keyboard,
   FilePlus2,
+  LogOut,
+  LayoutDashboard,
+  Images,
+  Globe,
+  User,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEditorStore } from '@/store/useEditorState';
+import { signOut, useSession } from 'next-auth/react';
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +47,81 @@ import { ExportPanel } from '@/components/export-panel';
 import { KeyboardShortcutModal } from '@/components/keyboard-shortcut-modal';
 import { toast } from 'sonner';
 
+// ── Nav dropdown ──────────────────────────────────────────────────────────────
+function NavMenu() {
+  const { data: session } = useSession();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/gallery/user', label: 'My Gallery', icon: Images },
+    { href: '/gallery', label: 'Community', icon: Globe },
+    { href: '/profile', label: 'Profile', icon: User },
+  ];
+
+  return (
+    <div className='relative' ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className='flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-800/80 hover:border-zinc-700/50 transition-colors text-zinc-300 text-xs font-medium'
+      >
+        <User size={13} className='text-zinc-400 shrink-0' />
+        <span className='hidden sm:block max-w-[80px] truncate'>
+          {session?.user?.name?.split(' ')[0] ??
+            session?.user?.email?.split('@')[0] ??
+            'Account'}
+        </span>
+        <ChevronDown
+          size={12}
+          className={cn(
+            'text-zinc-500 transition-transform shrink-0',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className='absolute right-0 top-full mt-1.5 w-44 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl z-[60] py-1 overflow-hidden'>
+          {navLinks.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className='flex items-center gap-2.5 px-3 py-2 text-xs text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 transition-colors'
+            >
+              <Icon size={13} className='text-zinc-500 shrink-0' />
+              {label}
+            </Link>
+          ))}
+          <div className='h-px bg-zinc-800 my-1' />
+          <button
+            onClick={() => {
+              setOpen(false);
+              signOut({ callbackUrl: '/signin' });
+            }}
+            className='w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors'
+          >
+            <LogOut size={13} className='shrink-0' />
+            Sign Out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Navbar ───────────────────────────────────────────────────────────────
 export function Navbar({
   fileInputRef,
 }: {
@@ -71,9 +153,7 @@ export function Navbar({
     fetchCredits();
   }, [fetchCredits]);
 
-  // Inside the Navbar component, after the fetchCredits useEffect:
   useEffect(() => {
-    // Only fire once, when the component mounts with a pre-existing image
     if (image) {
       toast.success('Session restored', {
         description: 'Your previous image was reloaded automatically.',
@@ -81,7 +161,7 @@ export function Navbar({
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally empty — only run on mount
+  }, []);
 
   const handleSave = async () => {
     if (!image || saving) return;
@@ -107,7 +187,7 @@ export function Navbar({
         <div className='flex items-center gap-3'>
           <Link
             className='flex items-center gap-2.5 font-bold text-lg hover:opacity-90 transition-opacity'
-            href='/'
+            href='/dashboard'
           >
             <div className='relative h-9 w-9 overflow-hidden rounded-lg flex items-center justify-center bg-linear-to-br from-purple-500/10 to-violet-600/10 border border-purple-500/20'>
               <Image
@@ -124,6 +204,23 @@ export function Navbar({
               <span className='text-yellow-500'>AI</span>
             </span>
           </Link>
+
+          {/* Quick nav links — desktop only */}
+          <div className='hidden lg:flex items-center gap-0.5 ml-1'>
+            {[
+              { href: '/dashboard', label: 'Dashboard' },
+              { href: '/gallery/user', label: 'My Gallery' },
+              { href: '/gallery', label: 'Community' },
+            ].map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className='px-2.5 py-1 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 rounded-lg transition-colors'
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Center: Undo/Redo */}
@@ -195,7 +292,7 @@ export function Navbar({
               </Tooltip>
             )}
 
-            {/* New Session button */}
+            {/* New Session */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -214,6 +311,7 @@ export function Navbar({
               </TooltipContent>
             </Tooltip>
 
+            {/* Upload */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -261,7 +359,7 @@ export function Navbar({
               </TooltipContent>
             </Tooltip>
 
-            {/* Compare before/after */}
+            {/* Compare */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -280,7 +378,7 @@ export function Navbar({
               </TooltipContent>
             </Tooltip>
 
-            {/* Export options */}
+            {/* Export */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -298,7 +396,7 @@ export function Navbar({
               </TooltipContent>
             </Tooltip>
 
-            {/* History Toggle + Shortcuts */}
+            {/* History + Shortcuts — desktop */}
             <div className='hidden md:flex items-center gap-1'>
               <div className='h-5 w-px bg-zinc-800 mx-1' />
               <Tooltip>
@@ -337,6 +435,10 @@ export function Navbar({
                 </TooltipContent>
               </Tooltip>
             </div>
+
+            {/* Account menu with logout */}
+            <div className='h-5 w-px bg-zinc-800 mx-0.5' />
+            <NavMenu />
           </TooltipProvider>
         </div>
       </header>
@@ -347,7 +449,6 @@ export function Navbar({
         onClose={() => setShowShortcutsModal(false)}
       />
 
-      {/* Reset Confirmation Dialog */}
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent className='bg-zinc-900 border-zinc-800 text-zinc-100'>
           <AlertDialogHeader>
