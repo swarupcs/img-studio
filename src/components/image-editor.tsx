@@ -37,6 +37,9 @@ const ImageEditor = () => {
   const isPanningRef = useRef(false);
   const lastPanPosRef = useRef<Point>({ x: 0, y: 0 });
   const spaceHeldRef = useRef(false);
+  // State mirrors of the above refs — needed so getCursor() rerenders correctly
+  const [isPanning, setIsPanning] = useState(false);
+  const [spaceHeld, setSpaceHeld] = useState(false);
 
   // Crop local state
   const [cropDragging, setCropDragging] = useState(false);
@@ -221,9 +224,13 @@ const ImageEditor = () => {
         return;
       e.preventDefault();
       spaceHeldRef.current = true;
+      setSpaceHeld(true);
     };
     const up = (e: KeyboardEvent) => {
-      if (e.code === 'Space') spaceHeldRef.current = false;
+      if (e.code === 'Space') {
+        spaceHeldRef.current = false;
+        setSpaceHeld(false);
+      }
     };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
@@ -246,6 +253,7 @@ const ImageEditor = () => {
     // Pan: middle mouse or space+drag
     if (e.button === 1 || spaceHeldRef.current) {
       isPanningRef.current = true;
+      setIsPanning(true);
       lastPanPosRef.current = { x: e.clientX, y: e.clientY };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       return;
@@ -420,6 +428,7 @@ const ImageEditor = () => {
   const handlePointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (isPanningRef.current) {
       isPanningRef.current = false;
+      setIsPanning(false);
       return;
     }
 
@@ -474,7 +483,7 @@ const ImageEditor = () => {
 
   // ── Cursor style ──────────────────────────────────────────────────────
   const getCursor = () => {
-    if (spaceHeldRef.current || isPanningRef.current) return 'grabbing';
+    if (spaceHeld || isPanning) return 'grabbing';
     switch (selectedTool) {
       case ToolType.BRUSH:
         return `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='${brushSize}' height='${brushSize}'><circle cx='${brushSize / 2}' cy='${brushSize / 2}' r='${brushSize / 2 - 1}' fill='none' stroke='white' stroke-width='1.5'/></svg>") ${brushSize / 2} ${brushSize / 2}, crosshair`;
