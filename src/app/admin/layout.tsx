@@ -2,8 +2,9 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Images, Home, ShieldAlert } from 'lucide-react';
+import { Home, ShieldAlert } from 'lucide-react';
 import { UserNav } from '@/components/layout/user-nav';
+import { AdminNav } from './admin-nav';
 
 export default async function AdminLayout({
   children,
@@ -34,12 +35,6 @@ export default async function AdminLayout({
     );
   }
 
-  const navItems = [
-    { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-    { href: '/admin/users', label: 'Users', icon: Users },
-    { href: '/admin/images', label: 'Images', icon: Images },
-  ];
-
   return (
     <div className='min-h-dvh bg-zinc-950 flex flex-col md:flex-row'>
       {/* Sidebar */}
@@ -56,16 +51,7 @@ export default async function AdminLayout({
         </div>
         
         <nav className='flex-1 p-3 md:p-4 space-y-1 overflow-y-auto flex flex-row md:flex-col gap-2 md:gap-1'>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className='flex items-center gap-3 px-3 py-2 md:py-2.5 rounded-lg text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/80 transition-colors'
-            >
-              <item.icon size={16} />
-              <span className='hidden md:block'>{item.label}</span>
-            </Link>
-          ))}
+          <AdminNav />
         </nav>
 
         <div className='p-3 md:p-4 border-t border-zinc-800/50 hidden md:block'>
