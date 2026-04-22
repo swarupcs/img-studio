@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "sonner";
+import NextTopLoader from 'nextjs-toploader';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   title: 'ImgStudio AI',
   description: 'AI Image Editor',
   keywords: 'imgstudio,ai,image editor',
-  creator: 'imgstudio',  
+  creator: 'imgstudio',
   icons: {
     icon: '/favicon.ico',
     // shortcut: '/favicon-16x16.png',
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-200`}
       >
+        <NextTopLoader color="#9333ea" showSpinner={false} />
         <AuthSessionProvider>{children}</AuthSessionProvider>
         <Toaster theme="dark" position="bottom-right" richColors />
       </body>
