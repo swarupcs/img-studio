@@ -6,12 +6,34 @@ const { auth } = NextAuth(authConfig);
 
 const authRoutes = ["/signin", "/signup"];
 
-export default auth((req) => {
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const isAuthenticated = !!req.auth;
+  const isAdmin = (req.auth?.user as any)?.role === 'ADMIN';
+
+  // Check Maintenance Mode (except for static assets or the maintenance page itself)
+  if (!isAdmin && pathname !== '/maintenance' && !pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
+    try {
+      // Use absolute URL pointing to our API
+      const res = await fetch(new URL('/api/settings', req.url), {
+        next: { revalidate: 60 }
+      });
+      if (res.ok) {
+        const config = await res.json();
+        if (config.maintenanceMode) {
+          return NextResponse.redirect(new URL('/maintenance', req.url));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to check maintenance mode in proxy:', e);
+    }
+  }
 
   // Public routes — always accessible regardless of auth
-  if (pathname === "/gallery" || (pathname.startsWith("/gallery") && !pathname.startsWith("/gallery/user"))) {
+  if (pathname === '/maintenance') {
+    return NextResponse.next();
+  }
+  if (pathname === "/gallery" || (pathname.startsWith("/gallery") && !pathname.startsWith("/gallery/user"))) {  
     return NextResponse.next();
   }
   if (pathname.startsWith("/p/") || pathname === "/p") {

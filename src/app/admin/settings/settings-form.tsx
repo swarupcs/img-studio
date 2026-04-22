@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 export function SettingsForm() {
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState({
     maintenanceMode: false,
     publicGalleryEnabled: true,
@@ -17,17 +18,57 @@ export function SettingsForm() {
     maxImageSize: 5,
   });
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          setSettings({
+            maintenanceMode: data.maintenanceMode,
+            publicGalleryEnabled: data.publicGalleryEnabled,
+            allowSignups: data.allowSignups,
+            defaultCredits: data.defaultCredits,
+            maxImageSize: data.maxImageSize,
+          });
+        }
+      } catch (error) {
+        toast.error('Failed to load settings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const handleChange = (key: keyof typeof settings, value: boolean | number) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 800));
-    toast.success('Settings updated successfully');
-    setIsSaving(false);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (res.ok) {
+        toast.success('Settings updated successfully');
+      } else {
+        throw new Error('Failed to update settings');
+      }
+    } catch (error) {
+      toast.error('Error updating settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return <div className="text-zinc-400">Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-8">

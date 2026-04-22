@@ -76,6 +76,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  const config = await prisma.systemConfig.findUnique({
+    where: { id: 'default' },
+  });
+  
+  const maxSizeBytes = (config?.maxImageSize ?? 5) * 1024 * 1024;
+  if (imageFile.size > maxSizeBytes) {
+    return NextResponse.json(
+      { error: `Image exceeds maximum upload size of ${config?.maxImageSize ?? 5}MB` },
+      { status: 413 }
+    );
+  }
+
   const fileToBase64 = async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
     return Buffer.from(arrayBuffer).toString('base64');

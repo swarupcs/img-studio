@@ -99,3 +99,13 @@ model CollectionImage {
 
   @@unique([collectionId, imageId])
 }
+
+model SystemConfig {
+  id                   String   @id @default("default")
+  maintenanceMode      Boolean  @default(false)
+  publicGalleryEnabled Boolean  @default(true)
+  allowSignups         Boolean  @default(true)
+  defaultCredits       Int      @default(20)
+  maxImageSize         Float    @default(5.0)
+  updatedAt            DateTime @updatedAt
+}

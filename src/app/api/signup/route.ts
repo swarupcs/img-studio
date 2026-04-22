@@ -4,6 +4,17 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { id: 'default' },
+    });
+
+    if (config && !config.allowSignups) {
+      return NextResponse.json(
+        { error: "New user registrations are currently disabled." },
+        { status: 403 },
+      );
+    }
+
     const { name, email, password } = await request.json();
 
     if (!email || !password) {
@@ -38,6 +49,7 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        credits: config?.defaultCredits ?? 20,
       },
     });
 
