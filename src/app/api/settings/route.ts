@@ -11,6 +11,8 @@ export async function GET() {
         publicGalleryEnabled: true,
         allowSignups: true,
         defaultCredits: true,
+        announcementMessage: true,
+        announcementEnabled: true,
       }
     });
 

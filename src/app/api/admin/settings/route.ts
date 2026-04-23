@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
+    await requireAdmin();
+
     let config = await prisma.systemConfig.findUnique({
       where: { id: 'default' },
     });

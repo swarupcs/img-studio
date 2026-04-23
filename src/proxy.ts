@@ -53,6 +53,11 @@ export default auth(async (req) => {
     return NextResponse.redirect(new URL("/signin", req.url));
   }
 
+  // Admin routes protection
+  if (pathname.startsWith('/admin') && !isAdmin) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   return NextResponse.next();
 });
 
