@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { STICKER_CATEGORIES } from "@/lib/constants";
-import { ToolType } from "@/lib/constants";
+import { STICKER_CATEGORIES, ToolType } from "@/config";
 import { useEditorStore } from "@/store/useEditorState";
 
 export function StickerPanel() {

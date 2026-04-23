@@ -1,18 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { ToolType } from "@/lib/constants";
+import { ToolType, TOOL_KEYS } from "@/config/tools.config";
 import { useEditorStore } from "@/store/useEditorState";
-
-const TOOL_KEYS: Record<string, ToolType> = {
-  m: ToolType.MOVE,
-  b: ToolType.BRUSH,
-  e: ToolType.ERASER,
-  c: ToolType.CROP,
-  t: ToolType.TEXT,
-  p: ToolType.COLOR_PICKER,
-  w: ToolType.SMART_REMOVE,
-};
 
 export function useKeyboardShortcuts() {
   const { setSelectedTool, setBrushSize, undo, redo, setShowShortcutsModal } = useEditorStore();

@@ -1,67 +1,69 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/services/auth-guard";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const { userId } = await requireAuth();
+    const { id } = await params;
 
-  const { id } = await params;
-
-  const collection = await prisma.collection.findUnique({
-    where: { id },
-    include: {
-      images: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          image: {
-            select: {
-              id: true,
-              title: true,
-              prompt: true,
-              imageData: true,
-              isPublic: true,
-              createdAt: true,
+    const collection = await prisma.collection.findUnique({
+      where: { id },
+      include: {
+        images: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            image: {
+              select: {
+                id: true,
+                title: true,
+                prompt: true,
+                imageData: true,
+                isPublic: true,
+                createdAt: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    });
 
-  if (!collection || collection.userId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!collection || collection.userId !== userId) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(collection);
+  } catch (e) {
+    if (e instanceof Response) return e;
+    throw e;
   }
-
-  return NextResponse.json(collection);
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const { userId } = await requireAuth();
+    const { id } = await params;
+
+    const collection = await prisma.collection.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!collection || collection.userId !== userId) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    await prisma.collection.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    if (e instanceof Response) return e;
+    throw e;
   }
-
-  const { id } = await params;
-
-  const collection = await prisma.collection.findUnique({
-    where: { id },
-    select: { userId: true },
-  });
-
-  if (!collection || collection.userId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  await prisma.collection.delete({ where: { id } });
-
-  return NextResponse.json({ success: true });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { PROMPT_TEMPLATES } from "@/lib/constants";
+import { PROMPT_TEMPLATES } from "@/config";
 import { useEditorStore } from "@/store/useEditorState";
 
 export function PromptTemplates() {

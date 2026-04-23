@@ -1,3 +1,5 @@
+// ── Domain Types ────────────────────────────────────────────────────────────
+
 export type Point = {
   x: number;
   y: number;
@@ -25,3 +27,9 @@ export type Adjustments = {
   contrast: number;
   saturation: number;
 };
+
+// ── Re-exports ──────────────────────────────────────────────────────────────
+
+export type { FilterConfig, RatioConfig, PromptTemplate, BlankCanvasSize } from './config.types';
+export type { EditImageResponse, GenerateResponse, CreditsResponse, ApiErrorResponse, CreditCheckResult } from './api.types';
+export type { CanvasEffects, CoreSlice, UISlice, CanvasSlice, AIActionsSlice, EditorState } from './editor.types';

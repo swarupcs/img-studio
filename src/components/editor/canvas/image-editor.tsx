@@ -1,6 +1,6 @@
 'use client';
 
-import { ToolType } from '@/lib/constants';
+import { ToolType } from '@/config/tools.config';
 import { useEditorStore } from '@/store/useEditorState';
 import { Point } from '@/types';
 import {

@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authConfig } from "@/auth.config";
+import { authConfig } from "@/config/auth.config";
 import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
@@ -25,7 +25,7 @@ export default auth(async (req) => {
         }
       }
     } catch (e) {
-      console.error('Failed to check maintenance mode in proxy:', e);
+      console.error('Failed to check maintenance mode in middleware:', e);
     }
   }
 

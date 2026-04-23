@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { requireAdmin } from '@/lib/services/auth-guard';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
@@ -18,6 +18,7 @@ export async function GET() {
 
     return NextResponse.json(config);
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error('Failed to update system config:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
@@ -28,17 +29,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await auth();
-
-    // Check if the user is an admin
-    const user = session?.user?.email ? await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true }
-    }) : null;
-
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireAdmin();
 
     const data = await request.json();
     
@@ -72,6 +63,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(updatedConfig);
   } catch (error) {
+    if (error instanceof Response) return error;
     console.error('Failed to update system config:', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },

@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/accordion";
 import GridItem from "@/components/grid-item";
 import { StickerPanel } from "@/components/editor/panels/sticker-panel";
-import { filters, ratios, ToolType } from "@/lib/constants";
+import { filters, ratios, ToolType } from "@/config";
 import { ToolButton } from "@/components/tool-button";
 import { useEditorStore } from "@/store/useEditorState";
 import { useRef, useState } from "react";
