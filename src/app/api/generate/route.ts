@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/services/auth-guard';
 import { checkCredits, deductCredits } from '@/lib/services/credits.service';
+import { checkRateLimit, recordRequest } from '@/lib/services/rate-limit.service';
 import { createGoogleAI } from '@/lib/services/ai.service';
 
 export async function POST(request: Request) {
   try {
     const { userId } = await requireAuth();
+    // Rate limit check
+    await checkRateLimit(userId, 'generate');
     await checkCredits(userId, 1);
 
     const { prompt, aspectRatio } = await request.json();
     if (!prompt?.trim()) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
+
+    // Record this request for rate limiting
+    await recordRequest(userId, 'generate');
 
     // Deduct 1 credit upfront for calling the LLM
     await deductCredits(userId, 1, 'API Call: Text to Image');

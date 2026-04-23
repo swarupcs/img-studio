@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Gauge } from 'lucide-react';
 
 export function SettingsForm() {
   const [isSaving, setIsSaving] = useState(false);
@@ -16,6 +17,9 @@ export function SettingsForm() {
     allowSignups: true,
     defaultCredits: 20,
     maxImageSize: 5,
+    rateLimitEnabled: true,
+    rateLimitMaxRequests: 20,
+    rateLimitWindowMin: 60,
   });
 
   useEffect(() => {
@@ -30,6 +34,9 @@ export function SettingsForm() {
             allowSignups: data.allowSignups,
             defaultCredits: data.defaultCredits,
             maxImageSize: data.maxImageSize,
+            rateLimitEnabled: data.rateLimitEnabled ?? true,
+            rateLimitMaxRequests: data.rateLimitMaxRequests ?? 20,
+            rateLimitWindowMin: data.rateLimitWindowMin ?? 60,
           });
         }
       } catch (error) {
@@ -139,6 +146,60 @@ export function SettingsForm() {
             <span className="text-sm text-zinc-400">MB per file</span>
           </div>
         </div>
+      </div>
+
+      {/* Rate Limiting */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-zinc-100 border-b border-zinc-800 pb-2 flex items-center gap-2">
+          <Gauge size={18} className="text-orange-400" />
+          Rate Limiting
+        </h3>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label className="text-base text-zinc-200">Enable Rate Limiting</Label>
+            <p className="text-sm text-zinc-400">Limit how many AI requests a user can make per time window.</p>
+          </div>
+          <Switch 
+            checked={settings.rateLimitEnabled} 
+            onCheckedChange={(v) => handleChange('rateLimitEnabled', v)} 
+          />
+        </div>
+
+        {settings.rateLimitEnabled && (
+          <div className="space-y-4 pl-1 border-l-2 border-orange-500/20 ml-1">
+            <div className="grid gap-2 pl-4">
+              <Label className="text-zinc-200">Max Requests Per Window</Label>
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="number" 
+                  value={settings.rateLimitMaxRequests}
+                  onChange={(e) => handleChange('rateLimitMaxRequests', parseInt(e.target.value) || 1)}
+                  min={1}
+                  className="w-24 bg-zinc-800/50 border-zinc-700 text-zinc-100"
+                />
+                <span className="text-sm text-zinc-400">AI requests (edit + generate combined per endpoint)</span>
+              </div>
+            </div>
+
+            <div className="grid gap-2 pl-4">
+              <Label className="text-zinc-200">Time Window</Label>
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="number" 
+                  value={settings.rateLimitWindowMin}
+                  onChange={(e) => handleChange('rateLimitWindowMin', parseInt(e.target.value) || 1)}
+                  min={1}
+                  className="w-24 bg-zinc-800/50 border-zinc-700 text-zinc-100"
+                />
+                <span className="text-sm text-zinc-400">minutes</span>
+              </div>
+              <p className="text-xs text-zinc-500">
+                Example: {settings.rateLimitMaxRequests} requests per {settings.rateLimitWindowMin} minute{settings.rateLimitWindowMin !== 1 ? 's' : ''} = ~{Math.round(settings.rateLimitMaxRequests / (settings.rateLimitWindowMin / 60))} requests/hour
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="pt-4 flex justify-end">

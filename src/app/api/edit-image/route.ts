@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/services/auth-guard';
 import { checkCredits, deductCredits } from '@/lib/services/credits.service';
+import { checkRateLimit, recordRequest } from '@/lib/services/rate-limit.service';
 import { createGoogleAI, generateWithRetry, fixImageOrientation, buildImagePart } from '@/lib/services/ai.service';
 import { cleanBase64Image, fileToBase64 } from '@/lib/utils/image.utils';
 
@@ -21,11 +22,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Rate limit check
+    await checkRateLimit(userId, 'edit-image');
+
     // Calculate and check credits
     const inputImagesCount = 1 + (maskFile ? 1 : 0) + userFiles.length;
     const filterCost = isFilter ? 1 : 0;
     const upfrontCost = inputImagesCount + filterCost;
     await checkCredits(userId, upfrontCost);
+
+    // Record this request for rate limiting
+    await recordRequest(userId, 'edit-image');
 
     // Check image size
     const config = await prisma.systemConfig.findUnique({ where: { id: 'default' } });

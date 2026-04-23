@@ -118,5 +118,17 @@ model SystemConfig {
   allowSignups         Boolean  @default(true)
   defaultCredits       Int      @default(20)
   maxImageSize         Float    @default(5.0)
+  rateLimitEnabled     Boolean  @default(true)
+  rateLimitMaxRequests Int      @default(20)
+  rateLimitWindowMin   Int      @default(60)
   updatedAt            DateTime @updatedAt
+}
+
+model RateLimitEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   // "edit-image" | "generate"
+  createdAt DateTime @default(now())
+
+  @@index([userId, endpoint, createdAt])
 }

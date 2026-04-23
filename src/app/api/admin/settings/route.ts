@@ -39,7 +39,10 @@ export async function PATCH(request: Request) {
       publicGalleryEnabled, 
       allowSignups, 
       defaultCredits, 
-      maxImageSize 
+      maxImageSize,
+      rateLimitEnabled,
+      rateLimitMaxRequests,
+      rateLimitWindowMin,
     } = data;
 
     const updatedConfig = await prisma.systemConfig.upsert({
@@ -50,6 +53,9 @@ export async function PATCH(request: Request) {
         allowSignups,
         defaultCredits,
         maxImageSize,
+        rateLimitEnabled,
+        rateLimitMaxRequests,
+        rateLimitWindowMin,
       },
       create: {
         id: 'default',
@@ -58,6 +64,9 @@ export async function PATCH(request: Request) {
         allowSignups: allowSignups ?? true,
         defaultCredits: defaultCredits ?? 20,
         maxImageSize: maxImageSize ?? 5.0,
+        rateLimitEnabled: rateLimitEnabled ?? true,
+        rateLimitMaxRequests: rateLimitMaxRequests ?? 20,
+        rateLimitWindowMin: rateLimitWindowMin ?? 60,
       },
     });
 

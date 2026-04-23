@@ -52,8 +52,12 @@ export async function callEditImage(
     body: formData,
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error || 'Failed to generate');
+    const err = await res.json().catch(() => ({})) as { error?: string; retryAfter?: number };
+    if (res.status === 429 && err.retryAfter) {
+      const mins = Math.ceil(err.retryAfter / 60);
+      throw new Error(err.error || `Rate limit exceeded. Try again in ${mins} minute${mins !== 1 ? 's' : ''}.`);
+    }
+    throw new Error(err.error || 'Failed to generate');
   }
   return res.json() as Promise<EditImageResponse>;
 }
@@ -71,8 +75,12 @@ export async function callGenerate(
     body: JSON.stringify({ prompt, aspectRatio }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error((err as { error?: string }).error || 'Failed to generate');
+    const err = await res.json().catch(() => ({})) as { error?: string; retryAfter?: number };
+    if (res.status === 429 && err.retryAfter) {
+      const mins = Math.ceil(err.retryAfter / 60);
+      throw new Error(err.error || `Rate limit exceeded. Try again in ${mins} minute${mins !== 1 ? 's' : ''}.`);
+    }
+    throw new Error(err.error || 'Failed to generate');
   }
   return res.json() as Promise<GenerateResponse>;
 }
